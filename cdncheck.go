@@ -122,24 +122,15 @@ func (c *Client) Check(ip net.IP) (matched bool, value string, itemType string, 
 
 // Check Domain with fallback checks if domain belongs to one of CDN, WAF and Cloud . It is generic method for Checkxxx methods
 // Since input is domain, as a fallback it queries CNAME records and checks if domain is WAF
+//
+// The historical four-value contract is preserved: a confirmed miss returns
+// (false, "", "", nil) while an inconclusive identification (resolution
+// failure, timeout, no usable address, failed CNAME fallback) returns a
+// non-nil error wrapping ErrDomainUndetermined so callers never mistake an
+// undetermined domain for a confirmed exclusion target. Use
+// CheckDomainWithFallbackDetailed for the three-state result with diagnostics.
 func (c *Client) CheckDomainWithFallback(domain string) (matched bool, value string, itemType string, err error) {
-	dnsData, err := c.retriabledns.Resolve(domain)
-	if err != nil {
-		return false, "", "", err
-	}
-	matched, value, itemType, err = c.CheckDNSResponse(dnsData)
-	if err != nil {
-		return false, "", "", err
-	}
-	if matched {
-		return matched, value, itemType, nil
-	}
-	// resolve cname
-	dnsData, err = c.retriabledns.CNAME(domain)
-	if err != nil {
-		return false, "", "", err
-	}
-	return c.CheckDNSResponse(dnsData)
+	return legacyDomainResult(c.CheckDomainWithFallbackDetailed(domain))
 }
 
 // CheckDNSResponse is same as CheckDomainWithFallback but takes DNS response as input

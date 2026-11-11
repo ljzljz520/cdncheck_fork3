@@ -26,7 +26,17 @@ type Output struct {
 	CloudName string    `json:"cloud_name,omitempty"`
 	Waf       bool      `json:"waf,omitempty"`
 	WafName   string    `json:"waf_name,omitempty"`
-	itemType  string
+	// Status is the three-state identification outcome: one of
+	// cdncheck.DomainStatusMatched, DomainStatusMissed or
+	// DomainStatusUndetermined.
+	Status string `json:"status,omitempty"`
+	// Reasons explains why an input is undetermined.
+	Reasons []string `json:"reasons,omitempty"`
+	// AddressQuery and CNAMEQuery carry the per-stage DNS diagnostics for
+	// domain inputs.
+	AddressQuery *cdncheck.QueryDiagnostic `json:"address_query,omitempty"`
+	CNAMEQuery   *cdncheck.QueryDiagnostic `json:"cname_query,omitempty"`
+	itemType     string
 }
 
 func (o *Output) String() string {
